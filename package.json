@@ -1,0 +1,20 @@
+{
+  "name": "the-internet",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "lint": "oxlint src/",
+    "format": "oxfmt src/",
+    "format:check": "oxfmt --check src/"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260307.1",
+    "@typescript/native-preview": "^7.0.0-dev",
+    "oxlint": "^1.51.0",
+    "oxfmt": "^0.36.0",
+    "wrangler": "^4.71.0"
+  },
+  "packageManager": "pnpm@10.28.1"
+}
