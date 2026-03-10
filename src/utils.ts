@@ -1,14 +1,14 @@
 // HTMLRewriter getAttribute() returns raw HTML — entities aren't decoded.
 // HN (and others) encode slashes as &#x2F; which breaks URL parsing.
+const NAMED_ENTITIES: Record<string, string> = {
+  "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'",
+};
+
 export function decodeHTMLEntities(s: string): string {
   return s
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
     .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'");
+    .replace(/&(?:amp|lt|gt|quot|apos);/g, (e) => NAMED_ENTITIES[e] ?? e);
 }
 
 export function resolveUrl(relative: string, base: string): string {

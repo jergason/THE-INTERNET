@@ -3,12 +3,11 @@ import { uppercaseScript } from "./uppercase-script";
 
 const SKIP_TAGS = new Set(["script", "style", "code", "pre", "textarea", "noscript", "svg"]);
 
-// matches html entities: &amp; &#x27; &#160; &nbsp; etc
-const ENTITY_PATTERN = /&(?:#(?:x[0-9a-fA-F]+|[0-9]+)|[a-zA-Z][a-zA-Z0-9]*);/g;
+// split on html entities, uppercase only the non-entity segments
+const ENTITY_PATTERN = /(&(?:#(?:x[0-9a-fA-F]+|[0-9]+)|[a-zA-Z][a-zA-Z0-9]*);)/g;
 
 function uppercasePreservingEntities(raw: string): string {
-  return raw.replace(ENTITY_PATTERN, (e) => `\x00${e}\x00`)
-    .split("\x00")
+  return raw.split(ENTITY_PATTERN)
     .map((part, i) => (i % 2 === 0 ? part.toUpperCase() : part))
     .join("");
 }
