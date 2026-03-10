@@ -1,7 +1,11 @@
 // HTMLRewriter getAttribute() returns raw HTML — entities aren't decoded.
 // HN (and others) encode slashes as &#x2F; which breaks URL parsing.
 const NAMED_ENTITIES: Record<string, string> = {
-  "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'",
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&quot;": '"',
+  "&apos;": "'",
 };
 
 export function decodeHTMLEntities(s: string): string {
@@ -57,7 +61,6 @@ export function stripHeaders(headers: Headers): Headers {
   stripped.set("access-control-allow-origin", "*");
   return stripped;
 }
-
 
 export function forwardHeaders(request: Request): HeadersInit {
   const forwarded: Record<string, string> = {};

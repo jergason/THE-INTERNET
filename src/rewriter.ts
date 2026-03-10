@@ -5,12 +5,11 @@ import { uppercaseScript } from "./uppercase-script";
 const ENTITY_PATTERN = /(&(?:#(?:x[0-9a-fA-F]+|[0-9]+)|[a-zA-Z][a-zA-Z0-9]*);)/g;
 
 function uppercasePreservingEntities(raw: string): string {
-  return raw.split(ENTITY_PATTERN)
+  return raw
+    .split(ENTITY_PATTERN)
     .map((part, i) => (i % 2 === 0 ? part.toUpperCase() : part))
     .join("");
 }
-
-
 
 class SimpleTextUppercaser implements HTMLRewriterElementContentHandlers {
   text(text: Text) {
