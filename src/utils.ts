@@ -1,3 +1,16 @@
+// HTMLRewriter getAttribute() returns raw HTML — entities aren't decoded.
+// HN (and others) encode slashes as &#x2F; which breaks URL parsing.
+export function decodeHTMLEntities(s: string): string {
+  return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
 export function resolveUrl(relative: string, base: string): string {
   try {
     return new URL(relative, base).href;
@@ -10,7 +23,8 @@ export function proxyUrl(targetUrl: string): string {
   return `/browse/${targetUrl}`;
 }
 
-export function resolveAndProxy(relative: string, baseUrl: string): string {
+export function resolveAndProxy(raw: string, baseUrl: string): string {
+  const relative = decodeHTMLEntities(raw);
   if (
     !relative ||
     relative.startsWith("data:") ||
@@ -44,14 +58,6 @@ export function stripHeaders(headers: Headers): Headers {
   return stripped;
 }
 
-export function getTargetOrigin(targetUrl: string): string {
-  try {
-    const u = new URL(targetUrl);
-    return u.origin;
-  } catch {
-    return "";
-  }
-}
 
 export function forwardHeaders(request: Request): HeadersInit {
   const forwarded: Record<string, string> = {};

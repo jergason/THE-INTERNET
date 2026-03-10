@@ -80,6 +80,16 @@ export const uppercaseScript = `
     });
   }
 
+  // notify parent of URL changes (back/forward, pushState, etc)
+  function postCurrentUrl() {
+    var path = window.location.pathname;
+    if (path.startsWith(PROXY_PREFIX)) {
+      var realUrl = path.slice(PROXY_PREFIX.length) + window.location.search + window.location.hash;
+      try { window.top.postMessage({ type: 'navigate', url: realUrl }, '*'); } catch(ex) {}
+    }
+  }
+  window.addEventListener('popstate', postCurrentUrl);
+
   // navigation interception — post to parent frame
   document.addEventListener('click', function(e) {
     var link = e.target.closest ? e.target.closest('a') : null;

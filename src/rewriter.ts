@@ -1,7 +1,17 @@
-import { resolveAndProxy, getTargetOrigin } from "./utils";
+import { resolveAndProxy } from "./utils";
 import { uppercaseScript } from "./uppercase-script";
 
 const SKIP_TAGS = new Set(["script", "style", "code", "pre", "textarea", "noscript", "svg"]);
+
+// matches html entities: &amp; &#x27; &#160; &nbsp; etc
+const ENTITY_PATTERN = /&(?:#(?:x[0-9a-fA-F]+|[0-9]+)|[a-zA-Z][a-zA-Z0-9]*);/g;
+
+function uppercasePreservingEntities(raw: string): string {
+  return raw.replace(ENTITY_PATTERN, (e) => `\x00${e}\x00`)
+    .split("\x00")
+    .map((part, i) => (i % 2 === 0 ? part.toUpperCase() : part))
+    .join("");
+}
 
 export class TextUppercaser implements HTMLRewriterElementContentHandlers {
   private depth = 0;
@@ -16,13 +26,10 @@ export class TextUppercaser implements HTMLRewriterElementContentHandlers {
 
   text(text: Text) {
     if (this.skipDepth > 0) {
-      // we're inside a skip tag — check if this text chunk's element ends
-      // unfortunately HTMLRewriter doesn't give us perfect nesting info here
-      // so we rely on the CSS fallback + client script for these edge cases
       return;
     }
     if (text.text) {
-      text.replace(text.text.toUpperCase(), { html: false });
+      text.replace(uppercasePreservingEntities(text.text), { html: true });
     }
   }
 }
@@ -43,7 +50,7 @@ export class SkipAwareTextUppercaser {
     return {
       text: (text: Text) => {
         if (text.text) {
-          text.replace(text.text.toUpperCase(), { html: false });
+          text.replace(uppercasePreservingEntities(text.text), { html: true });
         }
       },
     };
@@ -53,7 +60,7 @@ export class SkipAwareTextUppercaser {
 export class SimpleTextUppercaser implements HTMLRewriterElementContentHandlers {
   text(text: Text) {
     if (text.text) {
-      text.replace(text.text.toUpperCase(), { html: false });
+      text.replace(uppercasePreservingEntities(text.text), { html: true });
     }
   }
 }
@@ -107,8 +114,8 @@ export class HeadInjector implements HTMLRewriterElementContentHandlers {
   constructor(private targetUrl: string) {}
 
   element(el: Element) {
-    const origin = getTargetOrigin(this.targetUrl);
-    el.prepend(`<base href="${origin}/">`, { html: true });
+    // no <base> tag — it would redirect /browse/... paths to the target origin
+    // URLRewriter already resolves all relative URLs to absolute proxy paths
     el.append(
       `<style>*:not(input):not(textarea):not(select):not(code):not(pre):not(script):not(style) { text-transform: uppercase !important; }</style>`,
       { html: true },

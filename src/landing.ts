@@ -241,6 +241,19 @@ export function serveLandingPage(): Response {
       }
     });
 
+    // update URL bar on iframe full-page navigations (back/forward across pages)
+    frame.addEventListener('load', () => {
+      try {
+        const path = frame.contentWindow.location.pathname;
+        const prefix = '/browse/';
+        if (path.startsWith(prefix)) {
+          const search = frame.contentWindow.location.search || '';
+          const hash = frame.contentWindow.location.hash || '';
+          urlInput.value = path.slice(prefix.length) + search + hash;
+        }
+      } catch(e) {}
+    });
+
     // draw on load and resize
     window.addEventListener('load', drawChrome);
     window.addEventListener('resize', drawChrome);
