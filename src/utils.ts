@@ -11,7 +11,7 @@ export function decodeHTMLEntities(s: string): string {
     .replace(/&(?:amp|lt|gt|quot|apos);/g, (e) => NAMED_ENTITIES[e] ?? e);
 }
 
-export function resolveUrl(relative: string, base: string): string {
+function resolveUrl(relative: string, base: string): string {
   try {
     return new URL(relative, base).href;
   } catch {
@@ -19,7 +19,7 @@ export function resolveUrl(relative: string, base: string): string {
   }
 }
 
-export function proxyUrl(targetUrl: string): string {
+function proxyUrl(targetUrl: string): string {
   return `/browse/${targetUrl}`;
 }
 

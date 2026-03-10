@@ -25,6 +25,6 @@ export default {
       return new Response(null, { status: 204 });
     }
 
-    return new Response("NOT FOUND (BUT IN UPPERCASE)", { status: 404 });
+    return new Response("NOT FOUND", { status: 404 });
   },
 };

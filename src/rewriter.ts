@@ -1,8 +1,6 @@
 import { resolveAndProxy } from "./utils";
 import { uppercaseScript } from "./uppercase-script";
 
-const SKIP_TAGS = new Set(["script", "style", "code", "pre", "textarea", "noscript", "svg"]);
-
 // split on html entities, uppercase only the non-entity segments
 const ENTITY_PATTERN = /(&(?:#(?:x[0-9a-fA-F]+|[0-9]+)|[a-zA-Z][a-zA-Z0-9]*);)/g;
 
@@ -12,51 +10,9 @@ function uppercasePreservingEntities(raw: string): string {
     .join("");
 }
 
-export class TextUppercaser implements HTMLRewriterElementContentHandlers {
-  private depth = 0;
-  private skipDepth = 0;
 
-  element(el: Element) {
-    if (SKIP_TAGS.has(el.tagName)) {
-      if (this.skipDepth === 0) this.depth++;
-      this.skipDepth++;
-    }
-  }
 
-  text(text: Text) {
-    if (this.skipDepth > 0) {
-      return;
-    }
-    if (text.text) {
-      text.replace(uppercasePreservingEntities(text.text), { html: true });
-    }
-  }
-}
-
-// separate instance per tag to track skip nesting properly
-export class SkipAwareTextUppercaser {
-  private skipping = false;
-
-  forElement(tagName: string): HTMLRewriterElementContentHandlers {
-    if (SKIP_TAGS.has(tagName)) {
-      return {
-        element: () => {
-          this.skipping = true;
-        },
-        text: () => {},
-      };
-    }
-    return {
-      text: (text: Text) => {
-        if (text.text) {
-          text.replace(uppercasePreservingEntities(text.text), { html: true });
-        }
-      },
-    };
-  }
-}
-
-export class SimpleTextUppercaser implements HTMLRewriterElementContentHandlers {
+class SimpleTextUppercaser implements HTMLRewriterElementContentHandlers {
   text(text: Text) {
     if (text.text) {
       text.replace(uppercasePreservingEntities(text.text), { html: true });
@@ -64,7 +20,7 @@ export class SimpleTextUppercaser implements HTMLRewriterElementContentHandlers 
   }
 }
 
-export class AttributeUppercaser implements HTMLRewriterElementContentHandlers {
+class AttributeUppercaser implements HTMLRewriterElementContentHandlers {
   private attrs = ["alt", "title", "placeholder", "aria-label", "aria-placeholder"];
 
   element(el: Element) {
@@ -75,7 +31,7 @@ export class AttributeUppercaser implements HTMLRewriterElementContentHandlers {
   }
 }
 
-export class URLRewriter implements HTMLRewriterElementContentHandlers {
+class URLRewriter implements HTMLRewriterElementContentHandlers {
   constructor(
     private baseUrl: string,
     private attr: string,
@@ -89,7 +45,7 @@ export class URLRewriter implements HTMLRewriterElementContentHandlers {
   }
 }
 
-export class SrcsetRewriter implements HTMLRewriterElementContentHandlers {
+class SrcsetRewriter implements HTMLRewriterElementContentHandlers {
   constructor(private baseUrl: string) {}
 
   element(el: Element) {
@@ -109,7 +65,7 @@ export class SrcsetRewriter implements HTMLRewriterElementContentHandlers {
   }
 }
 
-export class HeadInjector implements HTMLRewriterElementContentHandlers {
+class HeadInjector implements HTMLRewriterElementContentHandlers {
   constructor(private targetUrl: string) {}
 
   element(el: Element) {
@@ -123,7 +79,7 @@ export class HeadInjector implements HTMLRewriterElementContentHandlers {
   }
 }
 
-export class MetaCSPRemover implements HTMLRewriterElementContentHandlers {
+class MetaCSPRemover implements HTMLRewriterElementContentHandlers {
   element(el: Element) {
     const equiv = el.getAttribute("http-equiv");
     if (equiv && equiv.toLowerCase().includes("content-security-policy")) {
