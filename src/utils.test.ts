@@ -21,13 +21,11 @@ describe("decodeHTMLEntities", () => {
   });
 
   it("decodes named entities", () => {
-    expect(decodeHTMLEntities("a&amp;b&lt;c&gt;d&quot;e&apos;f")).toBe('a&b<c>d"e\'f');
+    expect(decodeHTMLEntities("a&amp;b&lt;c&gt;d&quot;e&apos;f")).toBe("a&b<c>d\"e'f");
   });
 
   it("passes through strings with no entities", () => {
-    expect(decodeHTMLEntities("https://example.com/path?q=1")).toBe(
-      "https://example.com/path?q=1",
-    );
+    expect(decodeHTMLEntities("https://example.com/path?q=1")).toBe("https://example.com/path?q=1");
   });
 
   it("handles &#x27; (apostrophe, common in HN)", () => {
@@ -68,15 +66,11 @@ describe("resolveAndProxy with HN-encoded URLs", () => {
   });
 
   it("still resolves normal absolute URLs", () => {
-    expect(resolveAndProxy("https://example.com", HN_BASE)).toBe(
-      "/browse/https://example.com/",
-    );
+    expect(resolveAndProxy("https://example.com", HN_BASE)).toBe("/browse/https://example.com/");
   });
 
   it("passes through data: URIs", () => {
-    expect(resolveAndProxy("data:image/png;base64,abc", HN_BASE)).toBe(
-      "data:image/png;base64,abc",
-    );
+    expect(resolveAndProxy("data:image/png;base64,abc", HN_BASE)).toBe("data:image/png;base64,abc");
   });
 
   it("passes through javascript: URIs", () => {
