@@ -81,17 +81,18 @@ class SrcsetRewriter implements HTMLRewriterElementContentHandlers {
   }
 }
 
-class HeadInjector implements HTMLRewriterElementContentHandlers {
-  constructor(private targetUrl: string) {}
+const INJECTED_CSS = `<style>*:not(input):not(textarea):not(select):not(code):not(pre):not(script):not(style) { text-transform: uppercase !important; } code, pre, textarea, svg { text-transform: none !important; }</style>`;
+
+class ScriptAndStyleInjector implements HTMLRewriterElementContentHandlers {
+  injected = false;
 
   element(el: Element) {
-    // no <base> tag — it would redirect /browse/... paths to the target origin
-    // URLRewriter already resolves all relative URLs to absolute proxy paths
-    el.append(
-      `<style>*:not(input):not(textarea):not(select):not(code):not(pre):not(script):not(style) { text-transform: uppercase !important; } code, pre, textarea, svg { text-transform: none !important; }</style>`,
-      { html: true },
-    );
-    el.append(`<script>${uppercaseScript}</script>`, { html: true });
+    if (this.injected) return;
+    this.injected = true;
+    // prepend into body (fallback for pages without <head>), append into head
+    const method = el.tagName === "head" ? "append" : "prepend";
+    el[method](INJECTED_CSS, { html: true });
+    el[method](`<script>${uppercaseScript}</script>`, { html: true });
   }
 }
 
@@ -106,8 +107,10 @@ class MetaCSPRemover implements HTMLRewriterElementContentHandlers {
 
 export function buildRewriter(targetUrl: string): HTMLRewriter {
   const uppercaser = new TextUppercaser();
+  const injector = new ScriptAndStyleInjector();
   return new HTMLRewriter()
-    .on("head", new HeadInjector(targetUrl))
+    .on("head", injector)
+    .on("body", injector)
     .on("meta", new MetaCSPRemover())
     .on("a, area", new URLRewriter(targetUrl, "href"))
     .on("img", new URLRewriter(targetUrl, "src"))
