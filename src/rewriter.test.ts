@@ -108,6 +108,19 @@ describe("HTMLRewriter integration", () => {
     expect(resp.headers.get("access-control-allow-origin")).toBe("*");
   });
 
+  it("does not double-inject CSS when both head and body exist", async () => {
+    const resp = await worker.fetch("/browse/https://httpbin.org/html");
+    if (resp.status !== 200) return;
+    const html = await resp.text();
+    const cssCount = (html.match(/text-transform: uppercase/g) || []).length;
+    expect(cssCount).toBe(1);
+    const scriptCount = (html.match(/walkAndUppercase/g) || []).length;
+    // walkAndUppercase appears multiple times within the single script (definition + calls)
+    // but should NOT appear in a second duplicate script block
+    expect(scriptCount).toBeGreaterThan(0);
+    expect(scriptCount).toBeLessThan(10);
+  });
+
   it("injects resolveForProxy for relative URL handling", async () => {
     const resp = await worker.fetch("/browse/https://httpbin.org/html");
     if (resp.status !== 200) return;
