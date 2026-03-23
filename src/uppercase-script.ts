@@ -96,32 +96,28 @@ export const uppercaseScript = `
     if (!link) return;
     var href = link.getAttribute('href');
     if (!href) return;
-    // let proxy-rewritten links work naturally in the iframe
+    // already proxied — just tell parent the real URL
     if (href.startsWith(PROXY_PREFIX)) {
-      // extract the real URL and tell the parent to update the URL bar
       var realUrl = href.slice(PROXY_PREFIX.length);
-      try {
-        window.top.postMessage({ type: 'navigate', url: realUrl }, '*');
-      } catch(ex) {}
+      try { window.top.postMessage({ type: 'navigate', url: realUrl }, '*'); } catch(ex) {}
       return;
     }
-    // absolute external link not yet rewritten
-    if (href.startsWith('http://') || href.startsWith('https://')) {
+    // resolve via the same logic as fetch/XHR
+    var resolved = resolveForProxy(href);
+    if (resolved !== href) {
       e.preventDefault();
-      var proxied = PROXY_PREFIX + href;
-      try {
-        window.top.postMessage({ type: 'navigate', url: href }, '*');
-      } catch(ex) {}
-      window.location.href = proxied;
+      var navigateUrl = resolved.startsWith(PROXY_PREFIX) ? resolved.slice(PROXY_PREFIX.length) : href;
+      try { window.top.postMessage({ type: 'navigate', url: navigateUrl }, '*'); } catch(ex) {}
+      window.location.href = resolved;
     }
   }, true);
 
   // resolve any URL to a proxied URL
   function resolveForProxy(url) {
-    if (!url || url.startsWith(PROXY_PREFIX) || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:') || url.startsWith('#')) {
+    if (!url || url.startsWith(PROXY_PREFIX) || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:') || url.startsWith('#') || url.startsWith('mailto:') || url.startsWith('tel:')) {
       return url;
     }
-    if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
       return PROXY_PREFIX + url;
     }
     // relative URL — resolve against the target origin

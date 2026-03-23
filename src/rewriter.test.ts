@@ -139,6 +139,17 @@ describe("HTMLRewriter integration", () => {
     expect(allProxied).toBe(true);
   });
 
+  it("click handler uses resolveForProxy for link navigation", async () => {
+    const resp = await worker.fetch("/browse/https://httpbin.org/html");
+    if (resp.status !== 200) return;
+    const html = await resp.text();
+    // the click handler should use resolveForProxy instead of only matching http:// urls
+    expect(html).toContain("resolveForProxy(href)");
+    // should handle mailto: and tel: links without proxying
+    expect(html).toContain("mailto:");
+    expect(html).toContain("tel:");
+  });
+
   it("forwards POST body and content-type header", async () => {
     const resp = await worker.fetch("/browse/https://httpbin.org/post", {
       method: "POST",
