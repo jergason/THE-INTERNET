@@ -116,13 +116,33 @@ export const uppercaseScript = `
     }
   }, true);
 
+  // resolve any URL to a proxied URL
+  function resolveForProxy(url) {
+    if (!url || url.startsWith(PROXY_PREFIX) || url.startsWith('data:') || url.startsWith('blob:') || url.startsWith('javascript:') || url.startsWith('#')) {
+      return url;
+    }
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return PROXY_PREFIX + url;
+    }
+    // relative URL — resolve against the target origin
+    var path = window.location.pathname;
+    if (path.startsWith(PROXY_PREFIX)) {
+      var targetUrl = path.slice(PROXY_PREFIX.length) + window.location.search;
+      try {
+        var resolved = new URL(url, targetUrl).href;
+        return PROXY_PREFIX + resolved;
+      } catch(e) {}
+    }
+    return url;
+  }
+
   // patch fetch
   var origFetch = window.fetch;
   window.fetch = function(input, init) {
-    if (typeof input === 'string' && (input.startsWith('http://') || input.startsWith('https://'))) {
-      input = PROXY_PREFIX + input;
-    } else if (input instanceof Request && (input.url.startsWith('http://') || input.url.startsWith('https://')) && !input.url.includes(PROXY_PREFIX)) {
-      input = new Request(PROXY_PREFIX + input.url, input);
+    if (typeof input === 'string') {
+      input = resolveForProxy(input);
+    } else if (input instanceof Request && !input.url.includes(PROXY_PREFIX)) {
+      input = new Request(resolveForProxy(input.url), input);
     }
     return origFetch.call(this, input, init);
   };
@@ -130,8 +150,8 @@ export const uppercaseScript = `
   // patch XHR
   var origOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function(method, url) {
-    if (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://')) && !url.includes(PROXY_PREFIX)) {
-      url = PROXY_PREFIX + url;
+    if (typeof url === 'string') {
+      url = resolveForProxy(url);
     }
     return origOpen.apply(this, [method, url, ...Array.prototype.slice.call(arguments, 2)]);
   };
