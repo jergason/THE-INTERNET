@@ -138,4 +138,20 @@ describe("HTMLRewriter integration", () => {
     const allProxied = dataSrcMatches.every((m) => m.includes("/browse/"));
     expect(allProxied).toBe(true);
   });
+
+  it("forwards POST body and content-type header", async () => {
+    const resp = await worker.fetch("/browse/https://httpbin.org/post", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: "query=test&page=1",
+    });
+    if (resp.status !== 200) return;
+    const data = (await resp.json()) as {
+      form: Record<string, string>;
+      headers: Record<string, string>;
+    };
+    expect(data.form.query).toBe("test");
+    expect(data.form.page).toBe("1");
+    expect(data.headers["Content-Type"]).toContain("application/x-www-form-urlencoded");
+  });
 });
