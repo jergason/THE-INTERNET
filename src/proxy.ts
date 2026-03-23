@@ -54,9 +54,11 @@ export async function handleProxy(targetUrl: string, request: Request): Promise<
 
   let targetResponse: Response;
   try {
+    const hasBody = request.method !== "GET" && request.method !== "HEAD";
     targetResponse = await fetch(targetUrl, {
       method: request.method,
       headers: forwardHeaders(request),
+      body: hasBody ? request.body : undefined,
       redirect: "manual",
     });
   } catch {

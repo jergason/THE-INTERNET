@@ -64,7 +64,15 @@ export function stripHeaders(headers: Headers): Headers {
 
 export function forwardHeaders(request: Request): HeadersInit {
   const forwarded: Record<string, string> = {};
-  const pass = ["user-agent", "accept", "accept-language", "accept-encoding", "cookie", "referer"];
+  const pass = [
+    "user-agent",
+    "accept",
+    "accept-language",
+    "accept-encoding",
+    "cookie",
+    "referer",
+    "content-type",
+  ];
   pass.forEach((h) => {
     const v = request.headers.get(h);
     if (v) forwarded[h] = v;
