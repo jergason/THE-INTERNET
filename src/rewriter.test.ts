@@ -107,4 +107,14 @@ describe("HTMLRewriter integration", () => {
     expect(resp.headers.get("content-security-policy")).toBeNull();
     expect(resp.headers.get("access-control-allow-origin")).toBe("*");
   });
+
+  it("rewrites data-src attributes for lazy-loaded images", async () => {
+    const resp = await worker.fetch("/browse/https://www.wired.com");
+    if (resp.status !== 200) return;
+    const html = await resp.text();
+    const dataSrcMatches = html.match(/data-src="([^"]*)"/g) || [];
+    if (dataSrcMatches.length === 0) return; // skip if wired changed their pattern
+    const allProxied = dataSrcMatches.every((m) => m.includes("/browse/"));
+    expect(allProxied).toBe(true);
+  });
 });
