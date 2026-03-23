@@ -59,10 +59,13 @@ class URLRewriter implements HTMLRewriterElementContentHandlers {
 }
 
 class SrcsetRewriter implements HTMLRewriterElementContentHandlers {
-  constructor(private baseUrl: string) {}
+  constructor(
+    private baseUrl: string,
+    private attr: string = "srcset",
+  ) {}
 
   element(el: Element) {
-    const srcset = el.getAttribute("srcset");
+    const srcset = el.getAttribute(this.attr);
     if (!srcset) return;
     const rewritten = srcset
       .split(",")
@@ -74,7 +77,7 @@ class SrcsetRewriter implements HTMLRewriterElementContentHandlers {
         return parts.join(" ");
       })
       .join(", ");
-    el.setAttribute("srcset", rewritten);
+    el.setAttribute(this.attr, rewritten);
   }
 }
 
@@ -108,7 +111,9 @@ export function buildRewriter(targetUrl: string): HTMLRewriter {
     .on("meta", new MetaCSPRemover())
     .on("a, area", new URLRewriter(targetUrl, "href"))
     .on("img", new URLRewriter(targetUrl, "src"))
+    .on("img, source", new URLRewriter(targetUrl, "data-src"))
     .on("img, source", new SrcsetRewriter(targetUrl))
+    .on("img, source", new SrcsetRewriter(targetUrl, "data-srcset"))
     .on("video", new URLRewriter(targetUrl, "src"))
     .on("video", new URLRewriter(targetUrl, "poster"))
     .on("audio", new URLRewriter(targetUrl, "src"))
