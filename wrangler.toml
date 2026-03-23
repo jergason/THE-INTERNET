@@ -1,3 +1,6 @@
 name = "the-internet"
 main = "src/index.ts"
-compatibility_date = "2025-03-08"
+compatibility_date = "2026-03-23"
+routes = [
+  { pattern = "the-internet.jamison.dance", custom_domain = true }
+]
