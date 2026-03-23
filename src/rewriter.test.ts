@@ -108,6 +108,14 @@ describe("HTMLRewriter integration", () => {
     expect(resp.headers.get("access-control-allow-origin")).toBe("*");
   });
 
+  it("injects resolveForProxy for relative URL handling", async () => {
+    const resp = await worker.fetch("/browse/https://httpbin.org/html");
+    if (resp.status !== 200) return;
+    const html = await resp.text();
+    expect(html).toContain("function resolveForProxy");
+    expect(html).toContain("new URL(url, targetUrl)");
+  });
+
   it("rewrites data-src attributes for lazy-loaded images", async () => {
     const resp = await worker.fetch("/browse/https://www.wired.com");
     if (resp.status !== 200) return;
